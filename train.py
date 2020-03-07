@@ -100,8 +100,8 @@ def main():
     train_loss_history = []
     val_loss_history = []
     lr_history = []
-    val_freq = 1
-    save_freq = 2
+    val_freq = 50
+    save_freq = 500
     total_batches = len(train_loader)
 
     start = time.time()
@@ -149,8 +149,8 @@ def main():
 
                     model.train()
 
-                if b>=10:
-                    break
+                #if b>=10:
+                    #break
     finally:
         if isinstance(model, nn.DataParallel):
             sd = model.module.state_dict()
