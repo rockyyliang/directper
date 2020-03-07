@@ -71,21 +71,21 @@ class CDPNet(nn.Module):
     def __init__(self, funcs_dict, dims_dict, idim=(3,88,200)):
         super().__init__()
         self.idim = idim
-        self.func_dict = func_dict
+        self.funcs_dict = funcs_dict
         self.dims_dict = dims_dict
 
         #backbone
-        self.cnn = func_dict['cnn'](num_classes=dims_dict['cnn_out'])
+        self.cnn = funcs_dict['cnn'](num_classes=dims_dict['cnn_out'])
 
         #v encoder
-        self.sensory = func_dict['sensory'](
+        self.sensory = funcs_dict['sensory'](
             in_dim = dims_dict['sensory_in'],
             hidden_dim = dims_dict['sensory_hidden'],
             out_dim = dims_dict['sensory_out']
         )
 
         #unconditional branch (lstm)
-        self.uncond = func_dict['uncond'](
+        self.uncond = funcs_dict['uncond'](
             in_dim=dims_dict['cnn_out'],
             hidden_dim=dims_dict['uncond_hidden'],
             num_layers=dims_dict['uncond_nlayers']
@@ -93,7 +93,7 @@ class CDPNet(nn.Module):
         self.uncond_final = nn.Linear(dims_dict['uncond_hidden'], dims_dict['uncond_out'])
 
         #main lstm
-        self.main_lstm = func_dict['main'](
+        self.main_lstm = funcs_dict['main'](
             #input is the joint image+sensory representation
             in_dim=dims_dict['cnn_out']+dims_dict['sensory_out'],
             hidden_dim=dims_dict['main_hidden'],
@@ -101,31 +101,31 @@ class CDPNet(nn.Module):
         )
 
         #branches
-        self.out_follow = func_dict['branch'](
+        self.out_follow = funcs_dict['branch'](
             in_dim=dims_dict['main_hidden'],
             out_dim=dims_dict['branch_out'],
             layer1=dims_dict['branch_1'],
             layer2=dims_dict['branch_2']
         )
-        self.out_right = func_dict['branch'](
+        self.out_right = funcs_dict['branch'](
             in_dim=dims_dict['main_hidden'],
             out_dim=dims_dict['branch_out'],
             layer1=dims_dict['branch_1'],
             layer2=dims_dict['branch_2']
         )
-        self.out_left = func_dict['branch'](
+        self.out_left = funcs_dict['branch'](
             in_dim=dims_dict['main_hidden'],
             out_dim=dims_dict['branch_out'],
             layer1=dims_dict['branch_1'],
             layer2=dims_dict['branch_2']
         )
-        self.out_rlc = func_dict['branch'](
+        self.out_rlc = funcs_dict['branch'](
             in_dim=dims_dict['main_hidden'],
             out_dim=dims_dict['branch_out'],
             layer1=dims_dict['branch_1'],
             layer2=dims_dict['branch_2']
         )
-        self.out_llc = func_dict['branch'](
+        self.out_llc = funcs_dict['branch'](
             in_dim=dims_dict['main_hidden'],
             out_dim=dims_dict['branch_out'],
             layer1=dims_dict['branch_1'],
@@ -182,6 +182,38 @@ class CDPNet(nn.Module):
         branch_cat = torch.cat((follow, right, left, rlc, llc), dim=1)
 
         return [unconditional, branch_cat], (uncond_hidden, main_hidden)
+
+'''loss functions'''
+
+def mse_sum(pred, label):
+    '''mse without averaging'''
+    return (pred-label)**2
+
+def mae_sum(pred, label):
+    '''mae without averaging'''
+    return abs(pred-label)
+
+def branch_loss(pred, label, onehot_mask):
+    '''
+    onehot mask has a single ONE
+    tiled in here for masking multidimensional branch output
+    '''
+    num_branches = 5
+    num_out = 3
+
+    label = label.repeat(1, num_branches).float()
+    unmasked_losses = mse_sum(pred, label)
+    tiled_mask = torch.repeat_interleave(onehot_mask, repeats=num_out, dim=1)
+
+    masked_losses = unmasked_losses*tiled_mask
+    masked_losses = masked_losses.sum(dim=1)
+    return torch.mean(masked_losses)
+
+def combined_loss(pred, label, mask, weights=(1, 1)):
+    sensory_loss = F.mse_loss(pred[0], label[0])
+    perception_loss = branch_loss(pred[1], label[1], mask)
+    total_loss = sensory_loss*weights[0] + perception_loss*weights[1]
+    return total_loss, sensory_loss, perception_loss
 
 if __name__=='__main__':
     import torchvision

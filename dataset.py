@@ -201,7 +201,7 @@ if __name__=='__main__':
         'cte':1
     }
 
-    ds = DPDataset(dpath, scale_dict=scale_dict)
+    ds = DPDataset(dpath, scales_dict=scale_dict)
 
     X, y = ds[8]
     plt.imshow(np.moveaxis(X[0][0].numpy(),0,2))
