@@ -64,7 +64,7 @@ def main():
     iter_val = val_loader.__iter__()
 
     '''setup model'''
-    model = CDPNet(func_dict=func_dict, dims_dict=dims_dict)
+    model = CDPNet(funcs_dict=func_dict, dims_dict=dims_dict)
     DEVICE = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     if torch.cuda.device_count() > 1:
         print('Using {} GPUs'.format(torch.cuda.device_count()))

@@ -68,7 +68,7 @@ def return_branch(in_dim, out_dim, layer1=256, layer2=256):
 
 class CDPNet(nn.Module):
     '''conditional direct perception'''
-    def __init__(self, func_dict, dims_dict, idim=(3,88,200)):
+    def __init__(self, funcs_dict, dims_dict, idim=(3,88,200)):
         super().__init__()
         self.idim = idim
         self.func_dict = func_dict

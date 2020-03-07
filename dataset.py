@@ -4,10 +4,27 @@ import json
 import numpy as np
 import cv2
 
+import imgaug as ia
+import imgaug.augmenters as iaa
+
 import torch
 from torch.utils.data import Dataset
 
 from filehelp import make_file_name
+
+# define augmenter
+st = lambda aug: iaa.Sometimes(0.5, aug)
+oc = lambda aug: iaa.Sometimes(0.3, aug)
+rl = lambda aug: iaa.Sometimes(0.1,aug)
+seq = iaa.Sequential([
+    st(iaa.GaussianBlur((0, 1.5))),
+    #rl(iaa.AdditiveGaussianNoise(loc=0, scale=(0.0,0.05), per_channel=0.5)),
+    #oc(iaa.Dropout((0.0, 0.10), per_channel=0.5)),
+    oc(iaa.CoarseDropout((0.0, 0.05), size_percent=(0.08, 0.2),per_channel=0.5)),
+    oc(iaa.Add((-0.25, 0.25), per_channel=0.5)),
+    st(iaa.Multiply((0.8, 1.8), per_channel=0.2)),
+    rl(iaa.ContrastNormalization((0.5, 1.5), per_channel=0.5)),
+], random_order=True)
 
 def hlc_to_onehot(hlc_int):
     hlc_int = int(hlc_int)
@@ -23,7 +40,7 @@ def hlc_to_onehot(hlc_int):
         return output
 
 class DPDataset(Dataset):
-    def __init__(self, path, scales_dict, seq_len=5, separation=2, val_split=0.9, val=False, idim=(88,200,3)):
+    def __init__(self, path, scales_dict, seq_len=5, separation=2, val_split=0.9, val=False, aug=False, idim=(88,200,3)):
         self.path = path
         self.recordings_list = sorted(os.listdir(self.path))
         self.recordings_num = len(self.recordings_list)
@@ -45,6 +62,8 @@ class DPDataset(Dataset):
 
         self.idim = idim
         self.hlc_dim = 5
+
+        self.aug = aug
 
         self.scale_dict = scales_dict
 
@@ -124,6 +143,13 @@ class DPDataset(Dataset):
                 print('hlc is bool in', os.path.join(label_path, jname))
                 hlc = 2
             X_c[-1-inv_ts] = hlc_to_onehot(hlc)
+
+        #augment images
+        if self.aug:
+            X_p = X_p.astype(np.float32)
+            batch = ia.augmentables.batches.Batch(X_p)
+            seq.augment_batch(batch)
+            X_p = batch.images_aug
 
         #torch conversion
         X_p = np.moveaxis(X_p, 3, 1)
