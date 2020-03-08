@@ -93,15 +93,17 @@ def main():
         os.mkdir(weights_path)
     save_path = os.path.join(weights_path,date_string())
     os.mkdir(save_path)
-    copyfile(INIPATH, os.path.join(save_path, INIPATH))
+
+    config_name = os.path.split(INIPATH)[-1]
+    copyfile(INIPATH, os.path.join(save_path, config_name))
     print('saving weights to', save_path)
 
     '''training'''
     train_loss_history = []
     val_loss_history = []
     lr_history = []
-    val_freq = 50
-    save_freq = 500
+    val_freq = 10
+    save_freq = 50
     total_batches = len(train_loader)
 
     start = time.time()
@@ -144,12 +146,11 @@ def main():
                     val_loss_history.append(loss_val.item())
                     train_loss_history.append(total_loss.item())
 
-                    #print('e {}, b {}/{}, loss: {:.3f}, s_loss: {:.3f}, p_loss: \
-                    #{:.3f}, val loss: {:.3f}'.format(e, b, total_batches, total_loss, s_loss, p_loss, loss_val))
+                    print('e {}, b {}/{}, loss: {:.3f}, s_loss: {:.3f}, p_loss: {:.3f}, val loss: {:.3f}'.format(e, b, total_batches, total_loss, s_loss, p_loss, loss_val))
 
                     model.train()
 
-                #if b>=10:
+                #if b>=20:
                     #break
     finally:
         if isinstance(model, nn.DataParallel):
@@ -161,6 +162,7 @@ def main():
 
         fig_path = os.path.join(save_path, 'loss.png')
         save_train_history(train_loss_history, val_loss_history, fig_path, val_freq)
+        os.system('nvidia-smi')
 
 
 

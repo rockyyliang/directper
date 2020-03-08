@@ -164,11 +164,13 @@ class CDPNet(nn.Module):
         encoded = self._reconstruct_sequence(encoded, batch_size, seq_len)
 
         #unconditional output
+        self.uncond.flatten_parameters()
         unconditional, uncond_hidden = self.uncond(encoded[0], hidden_states[0])
         unconditional = self.uncond_final(unconditional[:,-1,:])
 
         #form joint representation and run through main lstm
         j = torch.cat(encoded, dim=2)
+        self.main_lstm.flatten_parameters()
         main, main_hidden = self.main_lstm(j, hidden_states[1])
         main = main[:,-1,:]
 
