@@ -1,3 +1,6 @@
+import matplotlib
+matplotlib.use('Agg')
+
 import os
 import sys
 import time
@@ -70,10 +73,10 @@ def main():
         seq_len=int(params_dict['seq_len']),
         separation=int(params_dict['separation'])
     )
-    train_loader = DataLoader(train_set, batch_size=int(params_dict['batch']), shuffle=True)
+    train_loader = DataLoader(train_set, batch_size=int(params_dict['batch']), shuffle=True, drop_last=True)
 
     val_set = DPDataset(DPATH, scales_dict=scales_dict, seq_len=int(params_dict['seq_len']), val=True)
-    val_loader = DataLoader(val_set, batch_size=int(params_dict['batch']), shuffle=True)
+    val_loader = DataLoader(val_set, batch_size=int(params_dict['batch']), shuffle=True, drop_last=True)
     iter_val = val_loader.__iter__()
 
     '''setup model'''
@@ -103,7 +106,7 @@ def main():
     val_loss_history = []
     lr_history = []
     val_freq = 10
-    save_freq = 50
+    save_freq = 100
     total_batches = len(train_loader)
 
     start = time.time()
@@ -135,7 +138,13 @@ def main():
 
                 if (b%val_freq==0) and b!=0:
                     model.eval()
-                    X_val, y_val = next(iter_val)
+                    try:
+                        X_val, y_val = next(iter_val)
+                    except StopIteration:
+                        #if we reach the end of validation data
+                        iter_val = val_loader.__iter__()
+                        X_val, y_val = next(iter_val)
+
                     X_val = [x.float().to(DEVICE) for x in X_val]
                     y_val = [wy.float().to(DEVICE) for wy in y_val]
 

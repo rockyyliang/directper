@@ -3,7 +3,7 @@
 #SBATCH --nodes=1
 #SBATCH --cpus-per-task=16
 #SBATCH --mem=47G
-#SBATCH --time=0-01:00:00
+#SBATCH --time=0-02:30:00
 #SBATCH --output=%N-%j.out
 #SBATCH --account=def-cogdrive
 

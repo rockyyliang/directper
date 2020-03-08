@@ -179,7 +179,7 @@ class DPDataset(Dataset):
         while(i<=j):
             if self.recordings_integral[i] > idx:
                 return i
-            if self.recordings_integral[j] < idx:
+            if self.recordings_integral[j] <= idx:
                 return j + 1
             i += 1
             j -= 1
@@ -190,7 +190,7 @@ class DPDataset(Dataset):
 if __name__=='__main__':
     import matplotlib.pyplot as plt
 
-    dpath = '/home/rocky/IMLEARN/Saved'
+    dpath = 'Saved/'
 
     scale_dict =  {
         'car_vx':0.1,
