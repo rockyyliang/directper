@@ -244,6 +244,9 @@ if __name__=='__main__':
     }
 
     model = CDPNet(func_dict, dims_dict)
+    par = nn.DataParallel(model)
+    if isinstance(par, nn.DataParallel):
+        print('model is parallel')
 
     bs = 32
     seq_len=5
