@@ -16,6 +16,6 @@ module load python/3.6
 module load scipy-stack
 source env_setup.sh
 
-python -u train.py $SLURM_TMPDIR/Saved ./configs/server.ini
+python -u train.py $SLURM_TMPDIR/Saved ./configs/lstm16.ini
 
 #nvidia-smi

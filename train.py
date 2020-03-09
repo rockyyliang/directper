@@ -125,8 +125,8 @@ def main():
 
                     model.train()
 
-                if b>=1:
-                    break
+                #if b>=1:
+                    #break
     finally:
         print('Training took {:.3f} seconds'.format(time.time()-start))
         if isinstance(model, nn.DataParallel):
