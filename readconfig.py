@@ -1,10 +1,14 @@
 import sys
 from configparser import ConfigParser
 
-import torchvision
+import torchvision.models as models
 
 '''function alias for imported models'''
-resnet18 = torchvision.models.resnet18
+resnet18 = models.resnet18
+squeezenet1_0 = models.squeezenet1_0
+mobilenet_v2 = models.mobilenet_v2
+mnasnet1_0 = models.mnasnet1_0
+
 from model import return_2_fc, return_lstm, return_branch
 
 def readconfig(cpath):

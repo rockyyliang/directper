@@ -218,10 +218,11 @@ def combined_loss(pred, label, mask, weights=(1, 1)):
     return total_loss, sensory_loss, perception_loss
 
 if __name__=='__main__':
+    import time
     import torchvision
 
     func_dict = {
-        'cnn':torchvision.models.resnet18,
+        'cnn':torchvision.models.densenet161,
         'sensory':return_2_fc,
         'uncond':return_lstm,
         'main':return_lstm,
@@ -244,9 +245,6 @@ if __name__=='__main__':
     }
 
     model = CDPNet(func_dict, dims_dict)
-    par = nn.DataParallel(model)
-    if isinstance(par, nn.DataParallel):
-        print('model is parallel')
 
     bs = 32
     seq_len=5
@@ -258,7 +256,9 @@ if __name__=='__main__':
 
     print('input shape:', X[0].shape, X[1].shape)
 
+    start = time.time()
     pred, hidden_states = model(X, (None, None))
+    print('inference time for {} batches: {:.3f}'.format(bs, time.time()-start))
 
     print('output shape:',pred[0].shape, pred[1].shape)
     print('hidden shape:')
